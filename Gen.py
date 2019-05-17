@@ -1,4 +1,4 @@
-from DistributionsUtil import distribute_st
+from DistributionsUtil import distribute_st, get_row_col_num
 from matplotlib import pyplot as plt
 
 class Gen:
@@ -18,13 +18,84 @@ class Gen:
 
             self.all_dists_borders[d] = (curr_d_param_borders, curr_d_st_borders)
 
-        for i, d in enumerate(self.all_dists.keys(), 1):
-            param_list = self.all_dists[d][0]
-            st_arr = self.all_dists[d][1]
-            st_borders_arr = self.all_dists_borders[d][1]
+        # for i, d in enumerate(self.all_dists.keys(), 1):
+        #     param_list = self.all_dists[d][0]
+        #     st_arr = self.all_dists[d][1]
+        #     st_borders_arr = self.all_dists_borders[d][1]
+        #     st_borders_rows, st_borders_cols = get_row_col_num(st_borders_arr)
+        #
+        #     # plt.figure(i)
+        #     plt.plot([s for s, t in st_arr], [t for s, t in st_arr], 'o')
+        #     # plt.plot([s for s, t in st_borders_arr], [t for s, t in st_borders_arr]) # st as matrix?
+        #
+        #     for j in range(st_borders_cols):
+        #         plt.plot([s for s, t in st_borders_arr[j*st_borders_rows:(j+1)*st_borders_rows]],
+        #                  [t for s, t in st_borders_arr[j * st_borders_rows:(j + 1) * st_borders_rows]], 'k')
+        #
+        #         plt.plot([s for s, t in [st_borders_arr[j + st_borders_rows * l] for l in range(st_borders_rows)]],
+        #                  [t for s, t in [st_borders_arr[j + st_borders_rows * l] for l in range(st_borders_rows)]], 'k')
+        # plt.show()
 
+    def plot_params(self, borders):
+        for i, d in enumerate(self.all_dists.keys(), 1):
             plt.figure(i)
-            plt.plot([s for s, t in st_arr], [t for s, t in st_arr], 'o')
-            plt.plot([s for s, t in st_borders_arr], [t for s, t in st_borders_arr]) # st as matrix?
+
+            currd_params = self.all_dists[d][0]
+            currd_param_labels = sorted(currd_params.keys())
+
+            if len(currd_params) == 1:
+                p_list = currd_params[currd_param_labels[0]]
+                pass
+
+            if len(currd_params) == 2:
+                p1_list = currd_params[currd_param_labels[0]]
+                p2_list = currd_params[currd_param_labels[1]]
+
+                for p1 in p1_list:
+                    for p2 in p2_list:
+                        plt.plot(p1, p2, 'bo')
+
+                plt.xlabel(currd_param_labels[0])
+                plt.ylabel(currd_param_labels[1])
+
+                if borders:
+                    borders_arr = self.all_dists_borders[d][0]
+                    p1_border_list = borders_arr[currd_param_labels[0]]
+                    p2_border_list = borders_arr[currd_param_labels[1]]
+
+                    # a bit of an overkill, can be achieved with less operations
+                    for j, p1 in enumerate(p1_border_list):
+                        for k, p2 in enumerate(p2_border_list):
+                            plt.plot([p1, p1], [p2, p2_border_list[(k+1)%self.n_split]], 'k')
+                            plt.plot([p1, p1_border_list[(k+1)%self.n_split]], [p2, p2], 'k')
 
         plt.show()
+
+
+    def plot_st_map(self, true_borders, line_borders):
+        for d in self.all_dists:
+            st_arr = self.all_dists[d][1]
+
+            plt.plot([s for s, t in st_arr], [t for s, t in st_arr], 'bo')
+
+        if line_borders:
+            st_borders_arr = self.all_dists_borders[d][1]
+            st_borders_rows, st_borders_cols = get_row_col_num(st_borders_arr)
+
+            for j in range(st_borders_cols):
+                plt.plot([s for s, t in st_borders_arr[j*st_borders_rows:(j+1)*st_borders_rows]],
+                         [t for s, t in st_borders_arr[j * st_borders_rows:(j + 1) * st_borders_rows]], 'y')
+
+                plt.plot([s for s, t in [st_borders_arr[j + st_borders_rows * l] for l in range(st_borders_rows)]],
+                         [t for s, t in [st_borders_arr[j + st_borders_rows * l] for l in range(st_borders_rows)]], 'y')
+
+        if true_borders:
+
+            pass
+
+        plt.show()
+
+    def identify_dist(self, st_coord):
+        answer = (None, None)
+
+        return answer

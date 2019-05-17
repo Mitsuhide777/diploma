@@ -18,7 +18,7 @@ def distribute_st(param_dict):
         if d == 'beta':
             all_dists['beta'] = (param_dict['beta'], generate_beta(param_dict['beta']))
         elif d == 'betaprime':
-            all_dists['betaprime'] = (param_dict['betaprime'], generate_beta(param_dict['betaprime']))
+            all_dists['betaprime'] = (param_dict['betaprime'], generate_betaprime(param_dict['betaprime']))
         else:
             continue
 
@@ -56,3 +56,46 @@ def generate_betaprime(param_list):
             st_arr.append((curr_s, curr_t))
 
     return st_arr
+
+def sgn(x):
+    if x > 0:
+        return 1
+    elif x < 0:
+        return -1
+    else:
+        return 0
+
+def get_row_col_num(st_arr):
+    if len(st_arr) == 0:
+        return (0, 0)
+    if len(st_arr) == 1:
+        return (1, 0)
+
+    row_num = 2
+
+    prev_diff = sgn(st_arr[1][1] - st_arr[0][1])
+    for i in range(2, len(st_arr)):
+        curr_diff = sgn(st_arr[i][1] - st_arr[i-1][1])
+        if curr_diff == prev_diff:
+            prev_diff = curr_diff
+            row_num += 1
+        else:
+            break
+
+    return (row_num, len(st_arr) // row_num)
+
+def within(st, st_borders_list):
+    ratio02 = (st_borders_list[2][1]-st_borders_list[0][1]) / (st_borders_list[2][0]-st_borders_list[0][0])
+    bias02 = st_borders_list[0][1] - ratio02*st_borders_list[0][0]
+    ratio23 = (st_borders_list[3][1] - st_borders_list[2][1]) / (st_borders_list[3][0] - st_borders_list[2][0])
+    bias23 = st_borders_list[2][1] - ratio23 * st_borders_list[2][0]
+    ratio31 = (st_borders_list[1][1] - st_borders_list[3][1]) / (st_borders_list[1][0] - st_borders_list[3][0])
+    bias31 = st_borders_list[1][1] - ratio31 * st_borders_list[1][0]
+    ratio10 = (st_borders_list[0][1] - st_borders_list[1][1]) / (st_borders_list[0][0] - st_borders_list[1][0])
+    bias10 = st_borders_list[1][1] - ratio10 * st_borders_list[1][0]
+
+    cond1 = st[1] >= ratio02*st[0] + bias02
+    cond2 = st[1] <= ratio23*st[0] + bias23
+    cond3 = st[1] <= ratio31*st[0] + bias31
+    cond4 = st[1] >= ratio10*st[0] + bias10
+    return cond1 and cond2 and cond3 and cond4
