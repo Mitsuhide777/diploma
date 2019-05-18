@@ -99,3 +99,20 @@ def within(st, st_borders_list):
     cond3 = st[1] <= ratio31*st[0] + bias31
     cond4 = st[1] >= ratio10*st[0] + bias10
     return cond1 and cond2 and cond3 and cond4
+
+def generate_samples(dist, curr_params, n):
+    if dist == 'beta':
+        a, b = curr_params
+        curr_sample = beta.rvs(a, b, size=n)
+    elif dist == 'betaprime':
+        a, b = curr_params
+        curr_sample = betaprime.rvs(a, b, size=n)
+    else:
+        return (None, None)
+
+    curr_sample.sort()
+    curr_e = [curr_sample[int(j * n)] for j in OCTILES]
+    curr_s = (curr_e[5] - 2 * curr_e[3] + curr_e[1]) / (curr_e[5] - curr_e[1])
+    curr_t = (curr_e[6] - curr_e[4] + curr_e[2] - curr_e[0]) / (curr_e[5] - curr_e[1])
+
+    return (curr_s, curr_t)
