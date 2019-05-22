@@ -1,9 +1,15 @@
-from DistributionsUtil import distribute_st, get_row_col_num, generate_samples, within
+from distributions_util import distribute_st, get_row_col_num, generate_samples, within
 from matplotlib import pyplot as plt
+
 
 class Gen:
     SAMPLE_SIZE = 100000
-    ITER_SIZE = 50
+    """
+    """
+
+    ITER_SIZE = 100
+    """
+    """
 
     def __init__(self, param_dist, split=10):
         self.all_dists = distribute_st(param_dist)
@@ -22,9 +28,56 @@ class Gen:
 
             self.all_dists_borders[d] = (curr_d_param_borders, curr_d_st_borders)
 
-
-
         # centers map here
+        self.calculate_centers_map()
+        # for d in self.all_dists.keys():
+        #     curr_d_param_borders = self.all_dists_borders[d][0]
+        #     curr_d_st_borders = self.all_dists_borders[d][1]
+        #
+        #     p1_centers = []
+        #     p2_centers = []
+        #     # len=2 case
+        #     curr_d_param_labels = sorted(curr_d_param_borders.keys())
+        #     for i in range(1, len(curr_d_param_borders[curr_d_param_labels[0]])):
+        #         p1_centers.append((curr_d_param_borders[curr_d_param_labels[0]][i] +
+        #                            curr_d_param_borders[curr_d_param_labels[0]][i - 1]) / 2.)
+        #
+        #     for i in range(1, len(curr_d_param_borders[curr_d_param_labels[1]])):
+        #         p2_centers.append((curr_d_param_borders[curr_d_param_labels[1]][i] +
+        #                            curr_d_param_borders[curr_d_param_labels[1]][i - 1]) / 2.)
+        #
+        #     for p1 in p1_centers:
+        #         for p2 in p2_centers:
+        #             # plt.plot(p1, p2, 'go')
+        #             for k in range(self.ITER_SIZE):
+        #                 sstt = generate_samples(d, [p1, p2], self.SAMPLE_SIZE)
+        #                 curr_el = (d, p1, p2)
+        #
+        #                 for in_d in sorted(self.all_dists_borders.keys()):
+        #                     st_borders_check_list = self.all_dists_borders[in_d][1]
+        #
+        #                     for i in range(self.n_split):
+        #                         for j in range(self.n_split):
+        #                             st_borders_check = (st_borders_check_list[self.n_split * i + j],
+        #                                                 st_borders_check_list[self.n_split * i + j + 1],
+        #                                                 st_borders_check_list[self.n_split * (i + 1) + j],
+        #                                                 st_borders_check_list[self.n_split * (i + 1) + j + 1])
+        #                             if within(sstt, st_borders_check):
+        #                                 if st_borders_check not in self.border_info:
+        #                                     self.border_info[st_borders_check] = {}
+        #                                 else:
+        #                                     if curr_el not in self.border_info[st_borders_check]:
+        #                                         self.border_info[st_borders_check][curr_el] = 1
+        #                                     else:
+        #                                         self.border_info[st_borders_check][curr_el] += 1
+        #                 # print(k, sstt)
+        #                 # print(k, p1, p2)
+        #             print(p1, p2)
+
+        for k, v in self.border_info.items():
+            print(k, v)
+
+    def calculate_centers_map(self):
         for d in self.all_dists.keys():
             curr_d_param_borders = self.all_dists_borders[d][0]
             curr_d_st_borders = self.all_dists_borders[d][1]
@@ -66,12 +119,8 @@ class Gen:
                                             else:
                                                 self.border_info[st_borders_check][curr_el] += 1
                         # print(k, sstt)
-                    # print()
-
-            # plt.show()
-            print(self.border_info)
-
-
+                        # print(k, p1, p2)
+                    print(p1, p2)
 
     def plot_params(self, borders):
         for i, d in enumerate(self.all_dists.keys(), 1):
@@ -108,7 +157,6 @@ class Gen:
 
         plt.show()
 
-
     def plot_st_map(self, true_borders, line_borders):
         for d in self.all_dists:
             st_arr = self.all_dists[d][1]
@@ -136,6 +184,9 @@ class Gen:
         plt.show()
 
     def identify_dist(self, st_coord):
-        answer = (None, None)
+        for bords, match in self.border_info.items():
+            if within(st_coord, bords):
+                s = sum(match.values())
+                return {k: v / s for k, v in match.items()}
 
-        return answer
+        return None
