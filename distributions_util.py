@@ -1,4 +1,5 @@
 from scipy.stats import beta, betaprime
+from .exceptions import *
 OCTILES = [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875]
 
 
@@ -34,6 +35,9 @@ def distribute_st(param_dict):
         that store specific distribution's parameter ranges and pairs (quantile skewness,
         quantile kurtosis) for each specific combination of parameters
     """
+    if len(param_dict) == 0:
+        raise EmptyDistributionsDict('No distribution dictionary was provided for identification.')
+
     all_dists = {}
     for d in param_dict.keys():
         if d == 'beta':
@@ -41,9 +45,13 @@ def distribute_st(param_dict):
         elif d == 'betaprime':
             all_dists['betaprime'] = (param_dict['betaprime'], generate_betaprime(param_dict['betaprime']))
         else:
+            print(d + ' distribution is currently not supported. The identification will be carried out for supported distributions only.')
             continue
 
-    return all_dists
+    if len(all_dists) != 0:
+        return all_dists
+    else:
+        raise DistributionNotSupported('No supported distributions were provided.')
 
 
 def generate_beta(param_list):
@@ -59,8 +67,19 @@ def generate_beta(param_list):
         as a point and act as a representation of beta distribution with specific
         parameters on a Pearson System
     """
+    if len(param_list) == 0:
+        raise EmptyParametersDict('No parameter dictionary was provided for beta distribution.')
+
+    if 'a' not in param_list or 'b' not in param_list:
+        raise WrongParameterName('Wrong parameter names provided for beta distribution')
+
     a_arr = param_list['a']
     b_arr = param_list['b']
+
+    if len(a_arr) == 0:
+        raise EmptyParameterList('No parameter list was provided for parameter alpha of beta distribution.')
+    if len(b_arr) == 0:
+        raise EmptyParameterList('No parameter list was provided for parameter beta of beta distribution.')
 
     st_arr = []
     for curr_a in a_arr:
@@ -87,8 +106,19 @@ def generate_betaprime(param_list):
         as a point and act as a representation of inverse beta distribution with
         specific parameters on a Pearson System
     """
+    if len(param_list) == 0:
+        raise EmptyParametersDict('No parameter dictionary was provided for inverse beta distribution.')
+
+    if 'a' not in param_list or 'b' not in param_list:
+        raise WrongParameterName('Wrong parameter names provided for beta distribution.')
+
     a_arr = param_list['a']
     b_arr = param_list['b']
+
+    if len(a_arr) == 0:
+        raise EmptyParameterList('No parameter list was provided for parameter alpha of inverse beta distribution.')
+    if len(b_arr) == 0:
+        raise EmptyParameterList('No parameter list was provided for parameter beta of inverse beta distribution.')
 
     st_arr = []
     for curr_a in a_arr:

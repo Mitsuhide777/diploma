@@ -1,17 +1,30 @@
-from distributions_util import distribute_st, get_row_col_num, generate_samples, within
+from .distributions_util import distribute_st, get_row_col_num, generate_samples, within, calculate_st
 from matplotlib import pyplot as plt
 
 
 class Gen:
-    SAMPLE_SIZE = 100000
     """
+    This class provides main functionality for identifying distributions and
+    thir parameters via a Pearson System that uses quantile skewness and
+    kurtosis as axes
     """
+    SAMPLE_SIZE = 300000
 
-    ITER_SIZE = 100
-    """
-    """
+    ITER_SIZE = 1000
 
+    # split value not higher than param_len; %=0 - best-case
     def __init__(self, param_dist, split=10):
+        """
+        :param param_dist: dict[str, dict[str, list[float]]]
+            A dictionary with keys which correspond to various distributions and
+            values that store specific distribution's parameter ranges
+        :param split: int
+            A positive number, shows in how many parts to split areas
+            in parameter planes and in S-T plane
+        """
+        if split <= 0:
+            raise ValueError('Split value must be positive.')
+
         self.all_dists = distribute_st(param_dist)
         self.n_split = split
         self.all_dists_borders = {}
@@ -30,60 +43,19 @@ class Gen:
 
         # centers map here
         self.calculate_centers_map()
-        # for d in self.all_dists.keys():
-        #     curr_d_param_borders = self.all_dists_borders[d][0]
-        #     curr_d_st_borders = self.all_dists_borders[d][1]
-        #
-        #     p1_centers = []
-        #     p2_centers = []
-        #     # len=2 case
-        #     curr_d_param_labels = sorted(curr_d_param_borders.keys())
-        #     for i in range(1, len(curr_d_param_borders[curr_d_param_labels[0]])):
-        #         p1_centers.append((curr_d_param_borders[curr_d_param_labels[0]][i] +
-        #                            curr_d_param_borders[curr_d_param_labels[0]][i - 1]) / 2.)
-        #
-        #     for i in range(1, len(curr_d_param_borders[curr_d_param_labels[1]])):
-        #         p2_centers.append((curr_d_param_borders[curr_d_param_labels[1]][i] +
-        #                            curr_d_param_borders[curr_d_param_labels[1]][i - 1]) / 2.)
-        #
-        #     for p1 in p1_centers:
-        #         for p2 in p2_centers:
-        #             # plt.plot(p1, p2, 'go')
-        #             for k in range(self.ITER_SIZE):
-        #                 sstt = generate_samples(d, [p1, p2], self.SAMPLE_SIZE)
-        #                 curr_el = (d, p1, p2)
-        #
-        #                 for in_d in sorted(self.all_dists_borders.keys()):
-        #                     st_borders_check_list = self.all_dists_borders[in_d][1]
-        #
-        #                     for i in range(self.n_split):
-        #                         for j in range(self.n_split):
-        #                             st_borders_check = (st_borders_check_list[self.n_split * i + j],
-        #                                                 st_borders_check_list[self.n_split * i + j + 1],
-        #                                                 st_borders_check_list[self.n_split * (i + 1) + j],
-        #                                                 st_borders_check_list[self.n_split * (i + 1) + j + 1])
-        #                             if within(sstt, st_borders_check):
-        #                                 if st_borders_check not in self.border_info:
-        #                                     self.border_info[st_borders_check] = {}
-        #                                 else:
-        #                                     if curr_el not in self.border_info[st_borders_check]:
-        #                                         self.border_info[st_borders_check][curr_el] = 1
-        #                                     else:
-        #                                         self.border_info[st_borders_check][curr_el] += 1
-        #                 # print(k, sstt)
-        #                 # print(k, p1, p2)
-        #             print(p1, p2)
-
-        for k, v in self.border_info.items():
-            print(k, v)
 
     def calculate_centers_map(self):
+        """
+        Secondary method that calculates a map of centers which
+        provides information about generated samples and their hits
+        :return: None
+        """
         for d in self.all_dists.keys():
             curr_d_param_borders = self.all_dists_borders[d][0]
-            curr_d_st_borders = self.all_dists_borders[d][1]
 
             p1_centers = []
             p2_centers = []
+
             # len=2 case
             curr_d_param_labels = sorted(curr_d_param_borders.keys())
             for i in range(1, len(curr_d_param_borders[curr_d_param_labels[0]])):
@@ -96,7 +68,6 @@ class Gen:
 
             for p1 in p1_centers:
                 for p2 in p2_centers:
-                    # plt.plot(p1, p2, 'go')
                     for k in range(self.ITER_SIZE):
                         sstt = generate_samples(d, [p1, p2], self.SAMPLE_SIZE)
                         curr_el = (d, p1, p2)
@@ -118,11 +89,16 @@ class Gen:
                                                 self.border_info[st_borders_check][curr_el] = 1
                                             else:
                                                 self.border_info[st_borders_check][curr_el] += 1
-                        # print(k, sstt)
-                        # print(k, p1, p2)
                     print(p1, p2)
 
     def plot_params(self, borders):
+        """
+        Additional method that draws a plot for each of input
+        distributions where parameter values serve as axes
+        :param borders: bool
+            A flag which specifies whether to draw border lines or not
+        :return: None
+        """
         for i, d in enumerate(self.all_dists.keys(), 1):
             plt.figure(i)
 
@@ -152,12 +128,22 @@ class Gen:
                     # a bit of an overkill, can be achieved with less operations
                     for j, p1 in enumerate(p1_border_list):
                         for k, p2 in enumerate(p2_border_list):
-                            plt.plot([p1, p1], [p2, p2_border_list[(k+1)%self.n_split]], 'k')
-                            plt.plot([p1, p1_border_list[(k+1)%self.n_split]], [p2, p2], 'k')
+                            plt.plot([p1, p1], [p2, p2_border_list[(k+1) % self.n_split]], 'k')
+                            plt.plot([p1, p1_border_list[(k+1) % self.n_split]], [p2, p2], 'k')
 
         plt.show()
 
     def plot_st_map(self, true_borders, line_borders):
+        """
+        Additional method that draws a plot of all the
+        distributions on S-T plane
+        :param true_borders: bool
+            A flag which specifies whether to draw true border lines or not
+        :param line_borders: bool
+            A flag which specifies whether to draw untrue borders,
+            straight lines or not
+        :return: None
+        """
         for d in self.all_dists:
             st_arr = self.all_dists[d][1]
 
@@ -169,13 +155,12 @@ class Gen:
 
             for j in range(st_borders_cols):
                 plt.plot([s for s, t in st_borders_arr[j*st_borders_rows:(j+1)*st_borders_rows]],
-                         [t for s, t in st_borders_arr[j * st_borders_rows:(j + 1) * st_borders_rows]], 'y')
+                         [t for s, t in st_borders_arr[j * st_borders_rows:(j + 1) * st_borders_rows]], 'k')
 
                 plt.plot([s for s, t in [st_borders_arr[j + st_borders_rows * l] for l in range(st_borders_rows)]],
-                         [t for s, t in [st_borders_arr[j + st_borders_rows * l] for l in range(st_borders_rows)]], 'y')
+                         [t for s, t in [st_borders_arr[j + st_borders_rows * l] for l in range(st_borders_rows)]], 'k')
 
         if true_borders:
-
             pass
 
         plt.xlabel('S')
@@ -184,9 +169,21 @@ class Gen:
         plt.show()
 
     def identify_dist(self, st_coord):
+        """
+        A method which identifies a given distribution/sample
+        represented as a point on S-T plane based on the
+        calculated centers map
+        :param st_coord: tuple[float, float]
+            A distribution/sample represented as a point on S-T plane
+        :return: dict[tuple[str, float, float], float]
+            A dictionary with keys which correspond to potential
+            distributions and their parameters and values that store
+            their probabilities
+        """
         for bords, match in self.border_info.items():
             if within(st_coord, bords):
                 s = sum(match.values())
                 return {k: v / s for k, v in match.items()}
 
+        print('Distribution could not be identified. You can try inputting another set of distributions or parameters.')
         return None
