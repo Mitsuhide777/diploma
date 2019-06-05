@@ -1,12 +1,12 @@
 from numpy import arange
-from scipy.stats import beta
+from scipy.stats import beta, betaprime
 from math import sqrt
 
 N_SPLIT = 10
 SAMPLE_SIZE = 300000
 ITER_SIZE = 1000
 OCTILES = [0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875]
-CENTER_LAYER = 1
+CENTER_LAYER = 0
 
 A_MIN = 2.1
 A_MAX = 6.1
@@ -84,7 +84,7 @@ true_t_arr = []
 # junk
 # print(st_arr[0], st_arr[1])
 hits = []
-for n in range(5):
+for n in range(10):
     for k, (a, b) in enumerate(ab_centers):
         ind_a = int(N_SPLIT // 2 - CENTER_LAYER + k//sqrt(len(ab_centers)))
         ind_b = int(N_SPLIT // 2 - CENTER_LAYER + k%sqrt(len(ab_centers)))
@@ -142,20 +142,24 @@ for a, b in ab_centers:
 
 from matplotlib import pyplot as plt
 
-plt.figure(1)
-#plot a_b
-plt.plot([el[0] for el in ab_arr], [el[1] for el in ab_arr], 'o')
-
-# draw a_b borders
-for a_border, b_border in zip(a_borders, b_borders):
-        plt.plot([a_borders[0], a_borders[-1]], [b_border]*2, 'k')
-        plt.plot([a_border]*2, [b_borders[0], b_borders[-1]], 'k')
-
-# draw a_b centers
-# plt.plot([el[0] for el in ab_centers], [el[1] for el in ab_centers], 'go')
-
-
-plt.figure(2)
+# plt.figure(1)
+# #plot a_b
+# plt.plot([el[0] for el in ab_arr], [el[1] for el in ab_arr], 'o')
+#
+# # draw a_b borders
+# for a_border, b_border in zip(a_borders, b_borders):
+#         plt.plot([a_borders[0], a_borders[-1]], [b_border]*2, 'k')
+#         plt.plot([a_border]*2, [b_borders[0], b_borders[-1]], 'k')
+#
+# # draw a_b centers
+# # plt.plot([el[0] for el in ab_centers], [el[1] for el in ab_centers], 'mo')
+#
+# plt.xlabel('alpha')
+# plt.ylabel('beta')
+# plt.title('Centers of rectangles in beta parameters plane')
+#
+#
+# plt.figure(2)
 # plot s_t
 plt.plot([s for s, t in st_arr], [t for s, t in st_arr], 'o')
 
@@ -170,8 +174,11 @@ for b_ind in b_border_inds:
 
 # draw sample s_t
 plt.plot(sample_s_arr, sample_t_arr, 'ro')
+plt.xlabel('S')
+plt.ylabel('T')
+plt.title('Samples generated from four central curvilinear rectangles')
 # plt.plot([[s for s, t in st_row] for st_row in st_borders], [[t for s, t in st_row] for st_row in st_borders], 'ro')
 
-# plt.plot([s for s, t in st_check], [t for s, t in st_check], 'go')
+# plt.plot([s for s, t in st_check], [t for s, t in st_check], 'mo')
 
 plt.show()
